@@ -45,6 +45,7 @@
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <StackReserveSize>5000000</StackReserveSize>
+      <StackCommitSize>5000000</StackCommitSize>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -66,6 +67,7 @@
   <ItemGroup>
     <ClInclude Include="Constants.h" />
     <ClInclude Include="DataTrack.h" />
+    <ClInclude Include="g12.h" />
     <ClInclude Include="Loc.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

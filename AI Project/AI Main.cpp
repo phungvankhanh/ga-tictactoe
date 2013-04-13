@@ -2,11 +2,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sstream>
+#include <string>
+#include <fstream>
 #include "Constants.h"
 #include "DataTrack.h"
 #include <time.h>
 
 using namespace std;
+
+string chromosome = "199#353A";
+string file = "chromosome.txt";
+short int gameArray[ARRAY_ROW][ARRAY_COL];
 
 class aiArrayOffensive
 {
@@ -41,7 +47,6 @@ class aiArrayOffensive
 			  int getY(short int move);
 			  int getZ(short int move);
 			  short int getMove(int turn);
-			  short int getLatest();
               //public for convenience... dont want to write all those get and set functions... bleh
               DataTrack stats;           // lifetime wins, losses, draws, birth(iteration #),
                            //death(iteration #), id#, spawned from id#, gave birth to id#.
@@ -75,14 +80,13 @@ class aiArrayDefensive
               int getWins();
               int getLoss();
               int getDraws();
-			  short int getElement(int row, int col);
+			  short int getElement(int row, int col, int dim);
 			  int TestMove(short int move);
               unsigned int getIdent();
 			  int getX(short int move);
 			  int getY(short int move);
 			  int getZ(short int move);
 			  short int getMove(int turn);
-			  short int getLatest();
               //public for convenience... dont want to write all those get and set functions... bleh
               DataTrack stats;           // lifetime wins, losses, draws, birth(iteration #),
                            //death(iteration #), id#, spawned from id#, gave birth to id#.
@@ -114,10 +118,24 @@ void BubbleSort(aiArrayDefensive def[POP_SIZE]);
 void PrintScores(aiArrayOffensive attack[POP_SIZE], aiArrayDefensive defend[POP_SIZE]);
 void Mutation(aiArrayOffensive* attack);
 void Mutation(aiArrayDefensive* defend);
+void validateArray(aiArrayOffensive att[POP_SIZE]);
+short int FindMissingElement(aiArrayOffensive att, int col);
+int writeChromosomeToFile(aiArrayOffensive att, aiArrayDefensive def, int count);
+void readChromosomeFromFile(short int arr1[ARRAY_ROW][ARRAY_COL], string filename, string chromosome);
 
 int main()
 {
 	cout<<"HI"<<endl;
+	
+	double iterToDo=iterationsToRun;
+	double iterNum;
+	double compPercent;
+	int printCount=0;
+	time_t sample_1;
+	time_t sample_2;
+	time_t start;
+	
+	start = time (NULL);
 
     aiArrayOffensive attack[POP_SIZE];
 	aiArrayDefensive defend[POP_SIZE];
@@ -143,7 +161,7 @@ int main()
 
 	//Populating Offensive and Defensive Arrays
 
-	cout<<"pupulated first dim"<<endl;
+	//cout<<"populated first dim"<<endl;
 
 	//PrintArray(tempArray);
 	
@@ -161,11 +179,10 @@ int main()
                 {
 						//cout<<"setting row "<<i<<", column "<<k<<endl;
                         tempArray[i][k]=GenerateLocation();
-
                 }
         }
 
-		cout<<"populating at "<<j<<endl;
+		//cout<<"populating at "<<j<<endl;
 
 		PopulateFirstDim(tempArray);
 		
@@ -190,10 +207,25 @@ int main()
     
     //system("PAUSE");
 
+
+	readChromosomeFromFile(gameArray, file ,chromosome);
+	attack[0].setArray(gameArray);
+	system("PAUSE");
+
+
+	cout<<"ITERATIONS STARTING....\n\n";
+
 	for(int k=0; k<iterationsToRun; k++)
 	{
 		int result;
 		int counter=0;
+		time_t temp1;
+		time_t temp2;
+		time_t timeToComplete;
+		struct tm * timeinfo;
+		time_t compDate;
+		
+		sample_1 = time (NULL);
 
 		for(int d=0; d<POP_SIZE; d++)
 		{
@@ -293,24 +325,80 @@ int main()
 			defend[e].setScore();
 		}
 		
-		cout<<"\n** **\n** **\n** ** FINISHED ITERATION #"<<k<<"** **\n** **\n** **\n\n\n";
+		iterNum=k;
+		compPercent=(iterNum/iterToDo)*100;
+		
+		cout<<"\n** **\n** **\n** ** FINISHED ITERATION #"<<k<<" ** ** :"<<compPercent<<"% complete .. \n** **";
+		
+		if(!(k<11))
+		{
+            cout<<" Latest ETA is "<<asctime(timeinfo)<<"\n** ** 10: "<<temp1<<" sec's, Elapsed: "<<temp2<<" sec's\n";
+  }
+  
+		cout<<"\n\n\n";
+		
 		
 		if(k==(iterationsToRun-1))
 		{
-            cout<<"\n\n\n\n*****ITERATIONS COMPLETED, PRINTING TOP ATTACKER*****\n\n\n\n";
+            /*cout<<"\n\n\n\n*****ITERATIONS COMPLETED, PRINTING TOP ATTACKER*****\n\n\n\n";
             attack[0].printArray();
             cout<<"\n\n";
             
             cout<<"\n\n\n\n*****ITERATIONS COMPLETED, PRINTING TOP DEFENDER*****\n\n\n\n";
             defend[0].printArray();
-            cout<<"\n\n";
+            cout<<"\n\n";*/
 
-			system("PAUSE");
+			cout<<"Writing to File"<<endl;
+
+			writeChromosomeToFile(attack[0], defend[0], printCount);
+
+			cout<<"Writing complete"<<endl;
+
+			//system("PAUSE");
         }
         
-        /*if(k%2==0 && k!=0)
+        if(k%500==0 && k!=0)
+        {
+         cout<<"Writing to File"<<endl;
+
+			      writeChromosomeToFile(attack[0], defend[0], printCount);
+
+			      cout<<"Writing complete"<<endl;
+			      
+			      printCount++;
+         
+         }
+        
+        if(k%10==0 && k!=0)
 		{
-            cout<<"\n\n\n\n*****PRINTING INTERMITTENT RESULTS, ATTACKER*****\n\n\n\n";
+
+			cout<<"Validating Attacker\n\n";
+			validateArray(attack);
+			cout<<"Complete!\n\n";
+			
+			sample_2 = time (NULL);
+			
+			temp1=difftime(sample_2, sample_1);
+			temp2=(difftime(sample_2, start));
+			
+			timeToComplete=(((100/compPercent)-1)*temp2);
+			
+			printf("Time for 10 Iterations is %ld seconds.\n\n", temp1);
+			printf("Time elapsed since program start is %ld seconds.\n\n", temp2);
+			cout<<"Estimated time remaining is : "<<timeToComplete<<" seconds.\n\n";
+			
+            compDate=timeToComplete+time(NULL);
+            timeinfo = localtime ( &compDate );
+			
+			printf ( "Estimated completion time is: %s", asctime (timeinfo) );
+			
+  /*struct tm * timeinfo;
+
+  timeinfo = localtime ( &timeToComplete );
+			
+			cout<<"Estimated time of completion is "<<asctime(timeinfo)<<"\n\n";*/
+
+            /*cout<<"\n\n\n\n*****PRINTING INTERMITTENT RESULTS, ATTACKER*****\n\n\n\n";
             
             for(int x=0; x<2; x++)
             {
@@ -326,8 +414,8 @@ int main()
                 cout<<"##$Defender #"<<x<<", Iteration "<<k<<endl;
                 defend[x].printArray();
                 cout<<"\n\n";
-            }
-        }*/
+            }*/
+        }
 	}
 
     //system("PAUSE");
@@ -392,7 +480,7 @@ void aiArrayOffensive::setArray(short int arr[ARRAY_ROW][ARRAY_COL])
 
 void aiArrayOffensive::setElement(int row, int col, int val)
 {
-     moveSet[row][col]=val;
+     moveSet[row][col]=(short int)val;
 }
 
 void aiArrayOffensive::setScore()
@@ -460,13 +548,6 @@ void aiArrayOffensive::printArray()
              
              cout<<endl;
      }
-}
-
-int aiArrayOffensive::dumpToFile()
-{
-     printf("Not implemented yet.... finish the code and try again later.\n");
-     
-     return 1;
 }
 
 void aiArrayOffensive::kill()
@@ -556,15 +637,15 @@ short int aiArrayOffensive::getMove(int turn)
 		if(i>=125)
 		{
 			cout<<"NO MOVESS!!!! (offensive) going into complete overdrive..."<<endl;
-			//system("PAUSE");
+            //system("PAUSE");
+            
+            short int tempArray[ARRAY_ROW][ARRAY_COL];
+            
+            PopulateFirstDim(tempArray);
 
-			short int tempArray[ARRAY_ROW][ARRAY_COL];
-
-			PopulateFirstDim(tempArray);
-
-			for(int i=0; i<ARRAY_ROW; i++)
+			for(int s=0; s<ARRAY_ROW; s++)
 			{
-				result=TestMove(tempArray[i][0]);
+				result=TestMove(tempArray[s][0]);
 
 				if(result==0)
 				{
@@ -611,20 +692,6 @@ short int aiArrayOffensive::getMove(int turn)
 }
 
 //CLASS DECLARATIONS FOLLOW FOR DEFENSIVE AI
-
-
-short int aiArrayOffensive::getLatest()
-{
-	for(int i=0; i<ARRAY_ROW; i++)
-	{
-		if(movesMade[i]==0)
-		{
-			return movesMade[i-1];
-		}
-	}
-
-	return movesMade[124];
-}
 
 aiArrayDefensive::aiArrayDefensive()
 {
@@ -774,18 +841,11 @@ void aiArrayDefensive::printArray()
                              cout<<endl;
                      }
                      
-                     cout<<moveSet[k][j]<<" ";
+                     cout<<moveSet[k][j][1]<<" ";
              }
              
              cout<<endl;
      }
-}
-
-int aiArrayDefensive::dumpToFile()
-{
-     printf("Not implemented yet.... finish the code and try again later.\n");
-     
-     return 1;
 }
 
 void aiArrayDefensive::kill()
@@ -818,9 +878,9 @@ unsigned int aiArrayDefensive::getIdent()
      return identNum;
 }
 
-short int aiArrayDefensive::getElement(int row, int col)
+short int aiArrayDefensive::getElement(int row, int col, int dim)
 {
-	return moveSet[row][col][1];
+	return moveSet[row][col][dim];
 }
 
 int aiArrayDefensive::TestMove(short int move)
@@ -894,7 +954,7 @@ short int aiArrayDefensive::getMove(int turn)
 
 				setMovesMade(turn-1, getX(move), getY(move), getZ(move));
 
-				return moveSet[i][(turn/2-1)][1];
+				return move;
 			}
 			else
 			{
@@ -932,15 +992,15 @@ short int aiArrayDefensive::getMove(int turn)
 
 				PopulateFirstDim(tempArray);
 
-				for(int i=0; i<ARRAY_ROW; i++)
+				for(int s=0; s<ARRAY_ROW; s++)
 				{
-					result=TestMove(tempArray[i][0]);
+					result=TestMove(tempArray[s][0]);
 
 					if(result==0)
 					{
                         //cout<<"Found valid move, making "<<tempArray[i][0]<<endl;
                                  
-						move=tempArray[i][0];
+						move=tempArray[s][0];
 
 						setMovesMade(turn-1, getX(move), getY(move), getZ(move));
 
@@ -951,7 +1011,7 @@ short int aiArrayDefensive::getMove(int turn)
 					
 					//cout<<"Invalid move at search: "<<tempArray[i][0]<<" has been made."<<endl;
 
-					if(i==124)
+					if(s==124)
 					{
 						cout<<"WTF!!!??"<<endl;
 						system("PAUSE");
@@ -967,19 +1027,6 @@ short int aiArrayDefensive::getMove(int turn)
 	system("PAUSE");
 
 	return move;
-}
-
-short int aiArrayDefensive::getLatest()
-{
-	for(int i=0; i<ARRAY_ROW; i++)
-	{
-		if(movesMade[i]==0)
-		{
-			return movesMade[i-1];
-		}
-	}
-
-	return movesMade[124];
 }
 
 //FUNCTION DEFINITIONS FOLLOW
@@ -1072,91 +1119,6 @@ void PopulateFirstDim(short int arr[ARRAY_ROW][ARRAY_COL])
 	//PrintArray(arr);
 }
 
-/*void Validate(short int arr[ARRAY_ROW][ARRAY_COL])
-{
-	cout<<"In Column Validate"<<endl;
-
-	short int tempArr[125];
-	int result=0;
-
-	for(int r=0; r<ARRAY_COL; r++)		//iterating through columns
-	{
-		//cout<<"In column "<<r<<endl;
-
-		for(int s=0; s<ARRAY_ROW; s++)	//iterating through rows, by the columns
-		{
-			tempArr[s]=arr[s][r];
-		}
-
-		cout<<"Set up a temp column, performing test"<<endl;
-
-		result=TestColumn(tempArr);
-
-		if(result==1)
-		{
-			for(int j=0; j<ARRAY_ROW; j++)
-			{
-				arr[r][j]=tempArr[j];
-			}
-		}
-	}
-}
-
-int TestColumn(short int arr[ARRAY_ROW])
-{
-	int error=0;
-
-	//cout<<"In columnTest "<<endl;
-
-	for(int d=0; d<ARRAY_ROW; d++)
-	{
-		//cout<<"In row "<<d<<endl;
-
-		for(int h=0; h<ARRAY_ROW; h++)
-		{
-			//cout<<"Testing arr["<<d<<"] vs arr["<<h<<"]";
-
-			//system("PAUSE");
-
-			if(arr[d]==arr[h] && d!=h)
-			{
-				cout<<" Error Detected in array at ["<<d<<"]("<<arr[d]<<") and ["<<h<<"]("<<arr[h]<<") "<<endl;
-
-				arr[d]=0;	//sets all equal ones to 0;
-
-				//cout<<"Attempting to correct error, replacing instance"<<endl;
-
-				int replace=rand() % 2 + 1;
-
-				if(replace==1)
-				{
-					cout<<"Attempting to correct error, replacing first instance"<<endl;
-					arr[d]=GenerateLocation();
-					cout<<"New value is "<<arr[d]<<endl;
-				}
-				else
-				{
-					cout<<"Attempting to correct error, replacing second instance"<<endl;
-					arr[h]=GenerateLocation();
-					cout<<"New value is "<<arr[h]<<endl;
-				}
-
-				error=1;
-
-				h--;
-			}
-			else
-			{
-				//cout<<" No error at ["<<d<<"]("<<arr[d]<<") and ["<<h<<"]("<<arr[h]<<") "<<endl;
-			}
-		}
-	}
-
-	cout<<"Error is "<<error;
-
-	return error;
-}*/
-
 void ShuffleElements(short int arr[ARRAY_ROW][ARRAY_COL])
 {
 	//cout<<"Now shuffling"<<endl;
@@ -1200,9 +1162,9 @@ void CrossOver(aiArrayOffensive attack1, aiArrayOffensive* attack2, int mode)
 	
 	//pick random column from arr1 and one random from arr2
 
-	short int randomColumn = rand() % (ARRAY_COL - 1);
-	short int randomRow = rand() % (ARRAY_ROW - 1);
-	short int randomRow2 = rand() % (ARRAY_ROW - 1);
+	short int randomColumn = rand() % ARRAY_COL;
+	short int randomRow = rand() % ARRAY_ROW;
+	short int randomRow2 = rand() % ARRAY_ROW;
 	
 	//cout<<"Preparing to cross ... \n";
 
@@ -1258,9 +1220,9 @@ void CrossOver(aiArrayDefensive defend1, aiArrayDefensive* defend2, int mode)
 	
 	//pick random column from arr1 and one random from arr2
 
-	short int randomColumn = rand() % (ARRAY_COL-1);
-	short int randomRow = rand() % (ARRAY_ROW-1);
-	short int randomRow2 = rand() % (ARRAY_ROW-1);
+	short int randomColumn = rand() % ARRAY_COL;
+	short int randomRow = rand() % ARRAY_ROW;
+	short int randomRow2 = rand() % ARRAY_ROW;
 
 	if(randomRow < randomRow2)
 	{ 
@@ -1278,8 +1240,8 @@ void CrossOver(aiArrayDefensive defend1, aiArrayDefensive* defend2, int mode)
 	{
 		for(short int x = min; x < max; x++)
 		{
-			swap1 = defend1.getElement(x, randomColumn);
-			swap2 = (*defend2).getElement(x, randomColumn);
+			swap1 = defend1.getElement(x, randomColumn, 1);
+			swap2 = (*defend2).getElement(x, randomColumn, 1);
 		
 			defend1.setElement(x, randomColumn, swap2);
 			(*defend2).setElement(x, randomColumn, swap1);
@@ -1289,7 +1251,7 @@ void CrossOver(aiArrayDefensive defend1, aiArrayDefensive* defend2, int mode)
 	{
 		for(short int x = min; x < max; x++)
 		{
-			swap1 = defend1.getElement(x, randomColumn);
+			swap1 = defend1.getElement(x, randomColumn, 1);
 
 			(*defend2).setElement(x, randomColumn, swap1);
 		}
@@ -1298,13 +1260,13 @@ void CrossOver(aiArrayDefensive defend1, aiArrayDefensive* defend2, int mode)
 
 void Mutation(aiArrayOffensive* attack)
 {
-	short int mutationNumber = rand()%10;
-	short int randomColumn = rand()%(ARRAY_COL-1);
+	short int mutationNumber = rand() % 40;
+	short int randomColumn = rand() % ARRAY_COL;
 	//choose the random elements to be mutated
 	for(short int i = 0; i < mutationNumber; i++)
 	{
 		//choose a random row
-		short int randomRow = rand() % (ARRAY_ROW-1);
+		short int randomRow = rand() % ARRAY_ROW;
 		//cout << "mutation on row # " << randomRow << endl;
 		//choose array1 or array2
 
@@ -1320,13 +1282,13 @@ void Mutation(aiArrayOffensive* attack)
 
 void Mutation(aiArrayDefensive* defend)
 {
-	short int mutationNumber = rand()%10;
-	short int randomColumn = rand()%(ARRAY_COL-1);
+	short int mutationNumber = rand() % 40;
+	short int randomColumn = rand() % ARRAY_COL;
 	//choose the random elements to be mutated
 	for(short int i = 0; i < mutationNumber; i++)
 	{
 		//choose a random row
-		short int randomRow = rand() % (ARRAY_ROW-1);
+		short int randomRow = rand() % ARRAY_ROW;
 		//cout << "mutation on row # " << randomRow << endl;
 		//choose array1 or array2
 
@@ -1406,6 +1368,187 @@ void PrintArray(short int arr[ARRAY_ROW][ARRAY_COL][2], int dim)
 	}
 }
 
+void validateArray(aiArrayOffensive att[POP_SIZE]) //aiArrayOffensive att[POP_SIZE]
+{
+	short int arr[ARRAY_ROW][ARRAY_COL];
+	int count=0;
+	PopulateFirstDim(arr);
+
+	for(int u=0; u<POP_SIZE; u++)
+	{
+		//cout<<"At attacker "<<u<<endl;
+
+		for(int s=0; s<ARRAY_COL; s++)
+		{
+			//cout<<"At column "<<s<<" of attacker "<<u<<endl;
+
+			for(int i=0; i < ARRAY_ROW; i++)
+			{
+				for(int j=i; j<ARRAY_ROW; j++)
+				{
+					if((att[u].getElement(i, s) == att[u].getElement(j, s)) && (i!=j) && (att[u].getElement(i, s)!=0 && att[u].getElement(j, s)!=0))
+					{
+						//cout<<"Same at "<<i<<" and "<<j<<" i.e. :"<<att[u].getElement(i, s)<<"=="<<att[u].getElement(j, s)<<endl;
+						count++;
+						short int k=0;
+
+						if(j>i)
+						{
+							//cout<<"Setting "<<j<<" to 0"<<endl;
+							att[u].setElement(j, s, 0);
+
+							k=FindMissingElement(att[u], s);
+
+							if(k>0)
+							{
+								att[u].setElement(j, s, k);
+							}
+							else
+							{
+								cout<<"WTF"<<endl;
+								system("PAUSE");
+							}
+						}
+
+						else if(i>j)
+						{
+							//cout<<"Setting "<<i<<" to 0"<<endl;
+							att[u].setElement(i, s, 0);
+
+							k=FindMissingElement(att[u], s);
+
+							if(k>0)
+							{
+								att[u].setElement(i, s, k);
+							}
+							else
+							{
+								cout<<"WTF"<<endl;
+								system("PAUSE");
+							}
+						}
+
+						//cout<<"Found a 0 at "<<g<<endl;
+					}
+				}
+			}
+
+			/*for(int g=0; g<ARRAY_ROW; g++)
+			{
+				if(att[u].getElement(g, s)==0)
+				{
+				
+				}
+			}*/
+		}
+	}
+
+	cout<<"Made "<<count<<" changes."<<endl;
+}
+
+short int FindMissingElement(aiArrayOffensive att, int col)
+{
+	short int arr[ARRAY_ROW][ARRAY_COL];
+
+	PopulateFirstDim(arr);
+
+	for(int h=0; h<ARRAY_ROW; h++)
+	{
+		bool found = false;
+
+		int k=0;
+
+		while(k < ARRAY_ROW && !found)
+		{
+			if(arr[h][0]==att.getElement(k, col))
+			{
+				found=true;
+			}
+
+			k++;
+		}
+
+		if(!found)
+		{
+			return arr[h][0];
+		}
+	}
+
+	return 0;
+}
+
+int writeChromosomeToFile(aiArrayOffensive att, aiArrayDefensive def, int count)
+{
+	ofstream file;
+
+	file.open ("chromosome.txt",ios::app);
+
+	cout<<"In write function, writing."<<endl;
+	
+	//Get the Attacking Chromosome
+	file << count <<"#"<< att.getElement(0,0) << "A" << endl;  //name of the chromosome format(ChromosomeCount#FirstElementInTheArray Attack or Defend)
+	for(int i = 0; i < ARRAY_ROW; i++)
+	{
+  
+		for(int j = 0; j < ARRAY_COL; j++)
+		{
+			file << att.getElement(i,j) << " ";
+		}
+		
+		file<<"\n";
+	}
+
+	file << "\n\n";
+
+	//Get the Defending Chromosome
+	file << count << "#" << def.getElement(0, 0, 0) << "D" << endl;
+	for(short int x = 0; x < ARRAY_ROW; x++)
+	{
+  
+		for(short int y = 0; y < ARRAY_COL; y++)
+		{
+			file << def.getElement(x, y, 1)<<" ";
+		}
+		 file<<"\n";
+	}
+
+	file << "\n\n";
+	count++;
+	file.close();
+
+	return count;
+}
+
+void readChromosomeFromFile(short int arr1[ARRAY_ROW][ARRAY_COL], string filename, string chromosome)
+{
+
+	ifstream file;
+	string line;
+
+	file.open(filename);
+	if(file.is_open())
+	{
+		cout << "file was opened\n";
+		while(!file.eof())
+		{
+			getline(file,line);
+			if(line.compare(chromosome) == 0)
+			{
+				cout << "Found Chromosome " << chromosome << endl;
+				for(short int i = 0; i < ARRAY_ROW; i++){
+					for(short int j = 0; j < ARRAY_COL; j++){
+						file >> arr1[i][j];
+					}
+				}
+			}
+
+			
+		}
+	}
+
+	else { cout << "File was not opened\n"; }
+
+}
 //PLAYING FUNCTIONS
 
 void display(char board[DIMENSION][DIMENSION][DIMENSION])
@@ -1629,6 +1772,8 @@ int PlayGame(aiArrayOffensive attacker, aiArrayDefensive defender)
 			moveZ=attacker.getZ(move)-1;
 			moveY=attacker.getY(move)-1;
 			moveX=attacker.getX(move)-1;
+
+
 
 			//cout << "Player X moves [" << moveZ << "][" << moveY << "][" << moveX << "]" << endl;
 			if (board[moveZ][moveY][moveX] == ' ')

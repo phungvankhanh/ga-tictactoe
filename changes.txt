@@ -1,0 +1,81 @@
+/* Additions to constants.h */
+/* Enter The Chromosome Here */
+//const string chromosome = "";					//Chromosome for the Competition			  
+//short int gameArray[ARRAY_ROW][ARRAY_COL];		//move set used for the competition
+int chromoCount = 0;
+
+
+
+/* Function Prototypes */
+int writeChromosomeToFile(aiArrayOffensive att, aiArrayDefensive def, int count);
+void readChromosomeFromFile(short int arr[ARRAY_ROW][ARRAY_COL], string chromosome); //make an array for it 
+
+
+
+
+//Call writeChromosomeToFile in the function where the print arrays are
+//chromoCount = writeChromosomeToFile(attack[0], defend[0], chromoCount);
+
+
+
+/* Functions (Place after voidPrintArray) */
+int writeChromosomeToFile(aiArrayOffensive att, aiArrayDefensive def, int count)
+{
+	
+	ofstream file;
+
+
+	file.open ("chromosome.txt",ios::app);
+
+	
+	//Get the Attacking Chromosome
+	file << count <<"#"<< att.getElement(0,0) << "A" << endl;  //name of the chromosome format(ChromosomeCount#FirstElementInTheArray Attack or Defend)
+	for(short int i = 0; i < ARRAY_ROW; i++){
+		for(short int j = 0; j < ARRAY_COL; j++){
+			file << att.getElement(i,j) << " ";
+		}
+	}
+
+	file << "\n\n";
+
+	//Get the Defending Chromosome
+	file << count << "#" << def.getElement(0,0) << "D" << endl;
+	for(short int x = 0; x < ARRAY_ROW; x++){
+		for(short int y = 0; y < ARRAY_COL; y++){
+			file << def.getElement(x,y) << " ";
+		}
+	}
+
+	file << "\n\n";
+	count++;
+	file.close();
+
+	return count;
+}
+
+void readChromosomeFromFile(short int arr[ARRAY_ROW][ARRAY_COL], string chromosome)
+{
+	ifstream file;
+	string line;
+
+	file.open("chromosome.txt");
+	if(file.is_open())
+	{
+		while(!file.eof())
+		{
+			getline(file,line);
+			if(line.compare(chromosome) == 0 )
+			{
+				//cout << "Found Chromosome " << chromosome << endl;
+				for(short int i = 0; i < ARRAY_ROW; i++){
+					for(short int j = 0; j < ARRAY_COL; j++){
+						file >> arr[i][j];
+					}
+				}
+			}
+		}
+	}
+
+	else { cout << "File was not opened\n"; }
+
+}

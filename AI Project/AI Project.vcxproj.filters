@@ -29,5 +29,8 @@
     <ClInclude Include="Loc.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="g12.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

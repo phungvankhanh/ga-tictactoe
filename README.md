@@ -1,2 +1,2 @@
-﻿This project was done in my AI class. It uses a genetic algorithm to try to find the most optimal moveset in a 5 by 5 by 5
-tic tac toe game. 
+﻿This project was done in my AI class in 2011. It uses a genetic algorithm to try to find the most optimal moveset to win a 5 by 5 by 5
+tic tac toe game. Most of the code is in the /AI Project folder. We wrote code for an offensive AI which only plays offensively in tic tac toe and we created a Defensive AI which plays defensively. We placed the two AI's against each other and ran it for about 3 days to create an optimal moveset. We placed those movesets into our chromosome file to use them in a competition against other AI programs made in the class. 
